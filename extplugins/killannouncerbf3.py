@@ -18,6 +18,7 @@
 import b3
 import b3.events
 from b3.plugin import Plugin
+from ConfigParser import NoOptionError
 from random import choice
 
 __version__ = '0.1'
@@ -27,11 +28,15 @@ __author__ = 'ozon'
 class Killannouncerbf3Plugin(Plugin):
     _adminPlugin = None
     _streak_table = {}
-    _handle_firstkill = False
+    _handle_firstkill = None
+    _round_started = False
     _weaponlist = None
 
 
     def onLoadConfig(self):
+        #load settings
+        self._load_settings()
+
         #check for settings section in config
         remove_sections = ['settings', 'first kill alert', 'losing streak alerts','kill streak alerts', 'end kill streak alerts',]
         if self.config.has_section('settings'):
@@ -52,8 +57,9 @@ class Killannouncerbf3Plugin(Plugin):
             # something is wrong, can't start without admin plugin
             self.error('Could not find admin plugin')
             return False
-            # register on events
+
         self._streak_table = {}
+        # register on events
         self.registerEvent(b3.events.EVT_CLIENT_KILL)
         self.registerEvent(b3.events.EVT_GAME_ROUND_START)
 
@@ -63,7 +69,7 @@ class Killannouncerbf3Plugin(Plugin):
         if event.type == b3.events.EVT_CLIENT_KILL:
             self.update_killstreaks(event.client, weapon=event.data[1], victim=event.target)
         elif event.type == b3.events.EVT_GAME_ROUND_START:
-            self._handle_firstkill = True
+            self._round_started = True
             self._streak_table = {}
 
     def update_killstreaks(self, client, weapon=None, victim=None):
@@ -91,8 +97,11 @@ class Killannouncerbf3Plugin(Plugin):
             self._streak_table.update({victim.name: {'kills': lossstreak}, })
 
         # actions
-        if self._handle_firstkill:
-            self._handle_firstkill=False
+        if self._handle_firstkill and self._round_started:
+            self.debug('Handle first kill')
+            msg_template = choice([ item[1] for item in self.config.items('first kill alert',raw=True) if item[0].startswith("us")])
+            self.console.saybig( msg_template % {'murderer': client.name, 'victim': victim.name})
+            self._round_started = False
 
         if weapon in self._weaponlist:
             msg_template = choice([ item[1] for item in self.config.items(weapon,raw=True) if item[0].startswith("us")])
@@ -106,6 +115,16 @@ class Killannouncerbf3Plugin(Plugin):
         if lossstreak_str[1:] in self.config.options('losing streak alerts'):
             msg_template = self.config.getTextTemplate('losing streak alerts', lossstreak_str[1:])
             self.console.saybig( msg_template % {'victim': victim.name, 'losstreak': lossstreak_str[1:],})
+
+    def _load_settings(self):
+        try:
+            self._handle_firstkill = self.config.getboolean('settings','announce first kill')
+        except NoOptionError:
+            self.warning('conf "announce first kill" not found, using default : yes')
+            self._handle_firstkill = True
+        except ValueError:
+            self.warning('conf "announce first kill" allow only yes or no as value')
+            self._handle_firstkill = True
 
 if __name__ == '__main__':
     # create a fake console which emulates B3
@@ -122,7 +141,7 @@ if __name__ == '__main__':
     simon.connects(cid=2)
     # superadmin put joe in group user
     superadmin.says('!putgroup joe user')
-    #superadmin.says('!putgroup simon user')
+    superadmin.says('!putgroup simon user')
 
     #fire some kills
     #joe.kills(simon)
