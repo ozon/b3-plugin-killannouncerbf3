@@ -17,11 +17,11 @@
 
 2. Add the following line in your b3.xml file (below the other plugin lines)
 ```xml
-<plugin name="admin" config="@conf/plugin_admin.xml"/>
+<plugin name="killannouncerbf3" config="@conf/plugin_killannouncerbf3.ini"/>
 ```
 
 ### Settings and Messages
-Look into `plugin_killannouncerbf3.xml` file. A detailed description is coming soon.
+Look into `plugin_killannouncerbf3.ini` file. A detailed description is coming soon.
 
 ## FAQ
 **Q**: What mean that bf3 in plugin name?  
