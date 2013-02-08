@@ -3,6 +3,7 @@
 ### Features
 
 - Killstreak announcer
+- first kill announcer
 - Announcements for kills with certain weapons  
   For example, to tell if someone is killed with a knife.
 - Random choice of the announcement  
