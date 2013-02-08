@@ -3,9 +3,9 @@
 ### Features
 
 - Killstreak announcer
-- Announcements for kills with certain weapons
+- Announcements for kills with certain weapons  
   For example, to tell if someone is killed with a knife.
-- Random choice of the announcement
+- Random choice of the announcement  
   Define different announcer for an action.
 
 ## Usage
@@ -23,5 +23,5 @@
 Look into `plugin_killannouncerbf3.xml` file. A detailed description is coming soon.
 
 ## FAQ
-**Q**: What mean that bf3 in plugin name?
+**Q**: What mean that bf3 in plugin name?  
 **A**: The plugin has been tested only on BF3. This does not mean that it does not work well with other games.
