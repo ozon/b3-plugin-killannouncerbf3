@@ -11,8 +11,8 @@
 ## Usage
 
 ### Installation
-1. Copy the file [extensions/killannouncerbf3.py](extensions/killannouncerbf3.py) into your `b3/extensions` folder and
-[extensions/conf/plugin_killannouncerbf3.ini](extensions/conf/plugin_killannouncerbf3.ini) into your `b3/conf` folder
+1. Copy the file [extplugins/killannouncerbf3.py](extensions/killannouncerbf3.py) into your `b3/extplugins` folder and
+[extplugins/conf/plugin_killannouncerbf3.ini](extplugins/conf/plugin_killannouncerbf3.ini) into your `b3/conf` folder
 
 2. Add the following line in your b3.xml file (below the other plugin lines)
 ```xml
