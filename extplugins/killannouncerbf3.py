@@ -44,7 +44,8 @@ class Killannouncerbf3Plugin(Plugin):
             all_sections = self.config.sections()
             #remove known section names
             for i in remove_sections:
-                all_sections.remove(i)
+                if i in all_sections:
+                    all_sections.remove(i)
 
             self._weaponlist = all_sections
         else:
