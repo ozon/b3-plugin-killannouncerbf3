@@ -68,54 +68,68 @@ class Killannouncerbf3Plugin(Plugin):
     def onEvent(self, event):
         """ Handle CLIENT_KILL and GAME_EXIT events """
         if event.type == b3.events.EVT_CLIENT_KILL:
-            self.update_killstreaks(event.client, weapon=event.data[1], victim=event.target)
+            self.update_killstreaks(event)
         elif event.type == b3.events.EVT_GAME_ROUND_START:
             self._round_started = True
             self._streak_table = {}
 
-    def update_killstreaks(self, client, weapon=None, victim=None):
+    def update_killstreaks(self, event):
         """ Update kill streaks table """
-        # handle win for client
-        if client:
-            killstreak = 1
-            if client.name in self._streak_table.keys():
-                current_kills = self._streak_table[client.name]['kills']
-                if current_kills >= 0:
-                    killstreak = current_kills + 1
-            self._streak_table.update({client.name: {'kills': killstreak}, })
+        if event.client and event.client.name is not event.target.name:
+            client = event.client
 
-        # handle loss for victim
-        if victim:
-            lossstreak = -1
-            if victim.name in self._streak_table.keys():
-                current_kills = self._streak_table[victim.name]['kills']
-                if current_kills <= 0:
-                    lossstreak = current_kills - 1
-                elif current_kills >= 5:
-                    msg_template = choice([ item[1] for item in self.config.items('end kill streak alerts',raw=True) if item[0].startswith("us")])
-                    self.console.saybig( msg_template % {'murderer': victim.name, 'victim': client.name,'kill_streak_value':str(current_kills)})
+            if event.target:
+                victim = event.target
 
-            self._streak_table.update({victim.name: {'kills': lossstreak}, })
+            if event.data[1]:
+               weapon = event.data[1]
 
-        # actions
-        if self._handle_firstkill and self._round_started:
-            self.debug('Handle first kill')
-            msg_template = choice([ item[1] for item in self.config.items('first kill alert',raw=True) if item[0].startswith("us")])
-            self.console.saybig( msg_template % {'murderer': client.name, 'victim': victim.name})
-            self._round_started = False
+            # handle win for client
+            if client:
+                killstreak = 1
+                if client.name in self._streak_table.keys():
+                    current_kills = self._streak_table[client.name]['kills']
+                    if current_kills >= 0:
+                        killstreak = current_kills + 1
+                self._streak_table.update({client.name: {'kills': killstreak}, })
 
-        if weapon in self._weaponlist:
-            msg_template = choice([ item[1] for item in self.config.items(weapon,raw=True) if item[0].startswith("us")])
-            self.console.saybig( msg_template % {'murderer': client.name, 'victim': victim.name,})
+            # handle loss for victim
+            if victim:
+                lossstreak = -1
+                if victim.name in self._streak_table.keys():
+                    current_kills = self._streak_table[victim.name]['kills']
+                    if current_kills <= 0:
+                        lossstreak = current_kills - 1
+                    elif current_kills >= 5:
+                        msg_template = choice([ item[1] for item in self.config.items('end kill streak alerts',raw=True) if item[0].startswith("us")])
+                        self.console.saybig( msg_template % {'murderer': victim.name, 'victim': client.name,'kill_streak_value':str(current_kills)})
 
-        if str(killstreak) in self.config.options('kill streak alerts'):
-            msg_template = self.config.getTextTemplate('kill streak alerts', str(killstreak))
-            self.console.saybig( msg_template % {'murderer': client.name, 'kill_streak_value': killstreak,})
+                self._streak_table.update({victim.name: {'kills': lossstreak}, })
 
-        lossstreak_str =  '%d' % lossstreak
-        if lossstreak_str[1:] in self.config.options('losing streak alerts'):
-            msg_template = self.config.getTextTemplate('losing streak alerts', lossstreak_str[1:])
-            self.console.saybig( msg_template % {'victim': victim.name, 'losstreak': lossstreak_str[1:],})
+            # actions
+            if self._handle_firstkill and self._round_started:
+                self.debug('Handle first kill')
+                msg_template = choice([ item[1] for item in self.config.items('first kill alert',raw=True) if item[0].startswith("us")])
+                self.console.saybig( msg_template % {'murderer': client.name, 'victim': victim.name})
+                self._round_started = False
+
+            if weapon in self._weaponlist:
+                msg_template = choice([ item[1] for item in self.config.items(weapon,raw=True) if item[0].startswith("us")])
+                self.console.saybig( msg_template % {'murderer': client.name, 'victim': victim.name,})
+
+            if str(killstreak) in self.config.options('kill streak alerts'):
+                msg_template = self.config.getTextTemplate('kill streak alerts', str(killstreak))
+                self.console.saybig( msg_template % {'murderer': client.name, 'kill_streak_value': killstreak,})
+
+            lossstreak_str =  '%d' % lossstreak
+            if lossstreak_str[1:] in self.config.options('losing streak alerts'):
+                msg_template = self.config.getTextTemplate('losing streak alerts', lossstreak_str[1:])
+                self.console.saybig( msg_template % {'victim': victim.name, 'losstreak': lossstreak_str[1:],})
+
+        # handle suicide
+        elif event.client.name is event.target.name:
+            self.debug('suicide detected')
+
 
     def _load_settings(self):
         try:
