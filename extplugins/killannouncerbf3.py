@@ -50,7 +50,6 @@ class PlayerKillTable(object):
 class Killannouncerbf3Plugin(Plugin):
     _adminPlugin = None
     _clientvar_name = 'Killannouncerbf3Plugin'
-    _streak_table = {}
     _handle_firstkill = False
     _round_started = False
     _weaponlist = None
@@ -84,8 +83,6 @@ class Killannouncerbf3Plugin(Plugin):
             self.error('Could not find admin plugin')
             return False
 
-        self._streak_table = {}
-
         self._load_streak_messages()
         # register on events
         self.registerEvent(b3.events.EVT_CLIENT_KILL)
@@ -96,10 +93,9 @@ class Killannouncerbf3Plugin(Plugin):
         """ Handle CLIENT_KILL and GAME_EXIT events """
         if event.type == b3.events.EVT_CLIENT_KILL:
             self.kill(event.client, event.target, event.data)
-
         elif event.type == b3.events.EVT_GAME_ROUND_START:
             self._round_started = True
-            self._streak_table = {}
+
 
     def _get_PlayerKillTable(self, client):
         """Return PlayKillTable or init a new"""
