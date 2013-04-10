@@ -20,6 +20,7 @@ import b3.events
 from b3.plugin import Plugin
 from ConfigParser import NoOptionError
 from random import choice
+from weapondef import WEAPON_NAMES_BY_ID
 
 __version__ = '0.1'
 __author__ = 'ozon'
@@ -28,7 +29,7 @@ __author__ = 'ozon'
 class Killannouncerbf3Plugin(Plugin):
     _adminPlugin = None
     _streak_table = {}
-    _handle_firstkill = None
+    _handle_firstkill = False
     _round_started = False
     _weaponlist = None
 
@@ -81,6 +82,11 @@ class Killannouncerbf3Plugin(Plugin):
         """ Update kill streaks table """
 
         self.debug('Attacker: %s, Victim: %s, Weapon: %s' % (client.name, victim.name, weapon))
+
+        #handle other types of kills
+        if weapon in ('SoldierCollision', 'Death', 'DamageArea', 'RoadKill'):
+            #self._streak_table.update({client.name: {'kills': 0}, })
+            return
 
         #handle Suicide
         if client.name == victim.name or weapon == 'Suicide':
