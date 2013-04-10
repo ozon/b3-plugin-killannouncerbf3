@@ -79,6 +79,15 @@ class Killannouncerbf3Plugin(Plugin):
 
     def update_killstreaks(self, client, weapon=None, victim=None):
         """ Update kill streaks table """
+
+        self.debug('Attacker: %s, Victim: %s, Weapon: %s' % (client.name, victim.name, weapon))
+
+        #handle Suicide
+        if client.name == victim.name or weapon == 'Suicide':
+            self._sayBig( 'Suicide' , {'murderer': client.name,})
+            self._streak_table.update({client.name: {'kills': 0}, })
+            return
+
         # handle win for client
         if client:
             killstreak = 1
