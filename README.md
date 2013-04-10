@@ -8,8 +8,13 @@
   For example, to tell if someone is killed with a knife.
 - Random choice of the announcement  
   Define different announcer for an action.
+- Define your Message in different languages
+
 
 ## Usage
+
+### Requirements
+- [IPInfoDB Plugin for Big Brother Bot](https://github.com/ozon/b3-plugin-ipinfodb)
 
 ### Installation
 1. Copy the file [extplugins/killannouncerbf3.py](extplugins/killannouncerbf3.py) into your `b3/extplugins` folder and
