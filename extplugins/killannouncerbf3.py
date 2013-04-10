@@ -87,6 +87,7 @@ class Killannouncerbf3Plugin(Plugin):
         # register on events
         self.registerEvent(b3.events.EVT_CLIENT_KILL)
         self.registerEvent(b3.events.EVT_GAME_ROUND_START)
+        self.registerEvent(b3.events.EVT_GAME_ROUND_END)
 
 
     def onEvent(self, event):
@@ -94,8 +95,16 @@ class Killannouncerbf3Plugin(Plugin):
         if event.type == b3.events.EVT_CLIENT_KILL:
             self.kill(event.client, event.target, event.data)
         elif event.type == b3.events.EVT_GAME_ROUND_START:
+            self._reset_PlayerKillTable()
             self._round_started = True
+        elif event.type == b3.events.EVT_GAME_ROUND_END:
+            self._reset_PlayerKillTable()
 
+    def _reset_PlayerKillTable(self):
+        # remove PlayerKillTable obj from client
+        for cid, c in self.console.clients.items():
+            if c.isvar(self, self._clientvar_name):
+                c.delvar(self, self._clientvar_name)
 
     def _get_PlayerKillTable(self, client):
         """Return PlayKillTable or init a new"""
