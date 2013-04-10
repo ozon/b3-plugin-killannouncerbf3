@@ -20,7 +20,7 @@ import b3.events
 from b3.plugin import Plugin
 from ConfigParser import NoOptionError
 from random import choice
-from weapondef import WEAPON_NAMES_BY_ID
+
 
 __version__ = '0.1'
 __author__ = 'ozon'
