@@ -25,9 +25,31 @@ from weapondef import WEAPON_NAMES_BY_ID
 __version__ = '0.1'
 __author__ = 'ozon'
 
+class PlayerKillTable(object):
+    kills = 0
+    losses = 0
+
+    current_kills = 0
+    current_losses = 0
+
+    def kill(self):
+        self.current_losses = 0
+        self.current_kills += 1
+
+    def get_kill(self):
+        _finish_streak = None
+        if self.current_kills >= 5:
+            _finish_streak = self.current_kills
+
+        self.current_kills = 0
+        self.current_losses += 1
+        return _finish_streak
+
+
 
 class Killannouncerbf3Plugin(Plugin):
     _adminPlugin = None
+    _clientvar_name = 'Killannouncerbf3Plugin'
     _streak_table = {}
     _handle_firstkill = False
     _round_started = False
@@ -73,68 +95,69 @@ class Killannouncerbf3Plugin(Plugin):
     def onEvent(self, event):
         """ Handle CLIENT_KILL and GAME_EXIT events """
         if event.type == b3.events.EVT_CLIENT_KILL:
-            self.update_killstreaks(event.client, weapon=event.data[1], victim=event.target)
+            self.kill(event.client, event.target, event.data)
+
         elif event.type == b3.events.EVT_GAME_ROUND_START:
             self._round_started = True
             self._streak_table = {}
 
-    def update_killstreaks(self, client, weapon=None, victim=None):
-        """ Update kill streaks table """
+    def _get_PlayerKillTable(self, client):
+        """Return PlayKillTable or init a new"""
+        if not client.isvar(self, self._clientvar_name):
+            client.setvar(self, self._clientvar_name, PlayerKillTable())
 
-        self.debug('Attacker: %s, Victim: %s, Weapon: %s' % (client.name, victim.name, weapon))
+        return client.var(self, self._clientvar_name).value
 
-        #handle other types of kills
-        if weapon in ('SoldierCollision', 'Death', 'DamageArea', 'RoadKill'):
-            #self._streak_table.update({client.name: {'kills': 0}, })
+    def kill(self, client, target, data):
+        if client is None:
+            self.debug('No Client found! ....return')
+            return
+        if target is None:
+            self.debug('No Target found! ....return')
+            return
+        if data is None:
+            self.debug('No data found! ....return')
             return
 
-        #handle Suicide
-        if client.name == victim.name or weapon == 'Suicide':
-            self._sayBig( 'Suicide' , {'murderer': client.name,})
-            self._streak_table.update({client.name: {'kills': 0}, })
+        _killer = client
+        _victim = target
+        _weapon = data[1]
+
+        if _weapon in ('SoldierCollision', 'Death', 'DamageArea'):
+            self.debug('Data: %s ....return' % _weapon)
             return
 
-        # handle win for client
-        if client:
-            killstreak = 1
-            if client.name in self._streak_table.keys():
-                current_kills = self._streak_table[client.name]['kills']
-                if current_kills >= 0:
-                    killstreak = current_kills + 1
-            self._streak_table.update({client.name: {'kills': killstreak}, })
+        _killer_data = self._get_PlayerKillTable(client)
+        _victim_data = self._get_PlayerKillTable(_victim)
 
-        # handle loss for victim
-        if victim:
-            lossstreak = -1
-            if victim.name in self._streak_table.keys():
-                current_kills = self._streak_table[victim.name]['kills']
-                if current_kills <= 0:
-                    lossstreak = current_kills - 1
-                elif current_kills >= 5:
-                    self._sayBig( 'end kill streak alerts' , {'murderer': victim.name, 'victim': client.name,'kill_streak_value':str(current_kills)})
 
-            self._streak_table.update({victim.name: {'kills': lossstreak}, })
+        # check for suicide before give points
+        if _killer.name == _victim.name or _weapon == 'Suicide':
+            # suicide detectet
+            _killer_data.get_kill()
+            self._sayBig( 'Suicide' , {'murderer': _killer.name,})
+            # we can leave here
+            return
+        else:
+            _killer_data.kill()
+            _finish_streak = _victim_data.get_kill()
 
-        # actions
+        # check for kill streak and handle
+        if str(_killer_data.current_kills) in self.streak_messages['us'].keys():
+            self._sayBig_killstreak( str(_killer_data.current_kills) , {'murderer': _killer.name, 'kill_streak_value': _killer_data.current_kills,})
+
+        # is killstreak finish?
+        if _finish_streak:
+            self._sayBig( 'end kill streak alerts' , {'murderer': _victim.name, 'victim': _killer.name,'kill_streak_value':_finish_streak})
+
+        # check for weapon action ( example: anounce msg on knifekill
+        if _weapon in self._weaponlist:
+            self._sayBig( _weapon , { 'murderer' : _killer.name, 'victim': _victim.name,})
+
+        # check for firstkill and handle
         if self._handle_firstkill and self._round_started:
-            self.debug('Handle first kill')
-            #msg_template = choice([ item[1] for item in self.config.items('first kill alert',raw=True) if item[0].startswith("us")])
-            self._sayBig( 'first kill alert' , {'murderer': client.name, 'victim': victim.name})
+            self._sayBig( 'first kill alert' , {'murderer': _killer.name, 'victim': _victim.name})
             self._round_started = False
-
-        if weapon in self._weaponlist:
-            ##msg_template = choice([ item[1] for item in self.config.items(weapon,raw=True) if item[0].startswith("us")])
-            self._sayBig( weapon , { 'murderer' : client.name, 'victim': victim.name,})
-
-        if str(killstreak) in self.streak_messages['us'].keys():
-            #msg_template = self.config.getTextTemplate('kill streak alerts', str(killstreak))
-            self._sayBig_killstreak( str(killstreak) , {'murderer': client.name, 'kill_streak_value': killstreak,})
-
-        lossstreak_str =  '%d' % lossstreak
-        if lossstreak_str[1:] in self.config.options('losing streak alerts'):
-            ##msg_template = self.config.getTextTemplate('losing streak alerts', lossstreak_str[1:])
-            self._sayBig( 'losing streak alerts' , {'victim': victim.name, 'losstreak': lossstreak_str[1:],})
-
 
     def _sayBig_killstreak(self, streak_count, formatvalues=None):
         clients = self.console.clients.getList()
@@ -143,7 +166,6 @@ class Killannouncerbf3Plugin(Plugin):
                 c.message(self.streak_messages[c.country.lower()][streak_count] % (formatvalues))
             else:
                 c.message(self.streak_messages['us'][streak_count] % (formatvalues))
-
 
     def _get_random_langmsg_dict(self, section):
         _msgitems = self.config.items(section, raw=True)
