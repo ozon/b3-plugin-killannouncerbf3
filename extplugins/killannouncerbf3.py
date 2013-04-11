@@ -38,7 +38,7 @@ class PlayerKillTable(object):
 
     def get_kill(self):
         _finish_streak = None
-        if self.current_kills >= 5:
+        if self.current_kills >= 10:
             _finish_streak = self.current_kills
 
         self.current_kills = 0
@@ -54,6 +54,7 @@ class Killannouncerbf3Plugin(Plugin):
     _round_started = False
     _weaponlist = None
 
+    _language_assignments = dict()
     streak_messages = dict()
 
 
@@ -153,7 +154,7 @@ class Killannouncerbf3Plugin(Plugin):
 
         # is killstreak finish?
         if _finish_streak:
-            self._sayBig( 'end kill streak alerts' , {'murderer': _victim.name, 'victim': _killer.name,'kill_streak_value':_finish_streak})
+            self._sayBig( 'end kill streak alerts' , {'murderer': _killer.name, 'victim': _victim.name,'kill_streak_value':_finish_streak})
 
         # check for weapon action ( example: anounce msg on knifekill
         if _weapon in self._weaponlist:
@@ -167,8 +168,9 @@ class Killannouncerbf3Plugin(Plugin):
     def _sayBig_killstreak(self, streak_count, formatvalues=None):
         clients = self.console.clients.getList()
         for c in clients:
-            if c.country.lower() in self.streak_messages:
-                c.message(self.streak_messages[c.country.lower()][streak_count] % (formatvalues))
+            _country_code = self._get_country_code(c.country.lower())
+            if _country_code in self.streak_messages:
+                c.message(self.streak_messages[_country_code][streak_count] % (formatvalues))
             else:
                 c.message(self.streak_messages['us'][streak_count] % (formatvalues))
 
@@ -187,10 +189,16 @@ class Killannouncerbf3Plugin(Plugin):
         else:
             clients = self.console.clients.getList()
             for c in clients:
-                if c.country.lower() in _msgdict:
-                    c.message(_msgdict[c.country.lower()] % (formatvalues))
+                _country_code = self._get_country_code(c.country.lower())
+                if _country_code in _msgdict:
+                    c.message(_msgdict[_country_code] % (formatvalues))
                 else:
                     c.message(_msgdict['us'] % (formatvalues))
+
+    def _get_country_code(self, country_code):
+        if country_code in self._language_assignments:
+            country_code = self._language_assignments[country_code]
+        return country_code
 
     def _load_streak_messages(self):
         _streak_items = self.config.items('kill streak alerts', raw=True)
@@ -210,6 +218,15 @@ class Killannouncerbf3Plugin(Plugin):
         except ValueError:
             self.warning('conf "announce first kill" allow only yes or no as value')
             self._handle_firstkill = True
+
+        # load _language_assignments
+        if self.config.has_section('language_assignments'):
+            try:
+                self._language_assignments = dict(self.config.items('language_assignments'))
+            except:
+                pass
+
+
 
 if __name__ == '__main__':
     # create a fake console which emulates B3
