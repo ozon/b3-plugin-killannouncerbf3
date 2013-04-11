@@ -22,7 +22,7 @@ from ConfigParser import NoOptionError
 from random import choice
 
 
-__version__ = '0.1'
+__version__ = '1.0.0'
 __author__ = 'ozon'
 
 class PlayerKillTable(object):
@@ -63,7 +63,7 @@ class Killannouncerbf3Plugin(Plugin):
         self._load_settings()
 
         #check for settings section in config
-        remove_sections = ['settings', 'first kill alert', 'losing streak alerts','kill streak alerts', 'end kill streak alerts',]
+        remove_sections = ['settings', 'first kill alert', 'losing streak alerts','kill streak alerts', 'end kill streak alerts', 'language_assignments',]
         if self.config.has_section('settings'):
             #load all section names
             all_sections = self.config.sections()
