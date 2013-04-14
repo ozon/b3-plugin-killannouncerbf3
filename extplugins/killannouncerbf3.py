@@ -223,8 +223,8 @@ class Killannouncerbf3Plugin(Plugin):
         if self.config.has_section('language_assignments'):
             try:
                 self._language_assignments = dict(self.config.items('language_assignments'))
-            except:
-                self.error('Can´t load section "language_assignments" from your config file')
+            except Exception, e:
+                self.error('Can´t load section "language_assignments" from your config file. %s', e)
 
 
 
