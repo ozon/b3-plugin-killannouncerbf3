@@ -1,3 +1,9 @@
+# -*- encoding: utf-8 -*-
+
+# add extplugins to the Python sys.path
+import sys, os, time
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../extplugins'))
+
 from unittest import TestCase
 from b3.fake import FakeConsole
 from b3.config import XmlConfigParser, CfgConfigParser
