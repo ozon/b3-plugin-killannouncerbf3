@@ -170,9 +170,9 @@ class Killannouncerbf3Plugin(Plugin):
         for c in clients:
             _country_code = self._get_country_code(c.country.lower())
             if _country_code in self.streak_messages:
-                c.message(self.streak_messages[_country_code][streak_count] % (formatvalues))
+                c.message(self.streak_messages[_country_code][streak_count] % formatvalues)
             else:
-                c.message(self.streak_messages['us'][streak_count] % (formatvalues))
+                c.message(self.streak_messages['us'][streak_count] % formatvalues)
 
     def _get_random_langmsg_dict(self, section):
         _msgitems = self.config.items(section, raw=True)
@@ -185,15 +185,15 @@ class Killannouncerbf3Plugin(Plugin):
     def _sayBig(self, message_section, formatvalues=None):
         _msgdict = self._get_random_langmsg_dict(message_section)
         if len(_msgdict) <= 1:
-            self.console.saybig(_msgdict.values()[0] % (formatvalues))
+            self.console.saybig(_msgdict.values()[0] % formatvalues)
         else:
             clients = self.console.clients.getList()
             for c in clients:
                 _country_code = self._get_country_code(c.country.lower())
                 if _country_code in _msgdict:
-                    c.message(_msgdict[_country_code] % (formatvalues))
+                    c.message(_msgdict[_country_code] % formatvalues)
                 else:
-                    c.message(_msgdict['us'] % (formatvalues))
+                    c.message(_msgdict['us'] % formatvalues)
 
     def _get_country_code(self, country_code):
         if country_code in self._language_assignments:
