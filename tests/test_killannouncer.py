@@ -31,17 +31,17 @@ announce first kill: yes
 us1: %(murderer)s takes first blood against %(victim)s! The battle has just began!!!
 de1: %(murderer)s hat das erste Blut von %(victim)s genommen! Die Schlacht hat begonnen!!!
 [kill streak alerts]
-us1 #7: Killing Spree! %(murderer)s is dominating on a %(kill_streak_value)s kill streak!
+us1 #5: Killing Spree! %(murderer)s is dominating on a %(kill_streak_value)s kill streak!
+us2 #10: Killing Spree! %(murderer)s is dominating on a %(kill_streak_value)s kill streak!
+[end kill streak alerts]
+us1: %(murderer)s has ended %(murderer)s kill streak at %(kill_streak_value)s kills!
+
         ''')
         self.p.onLoadConfig()
         self.p.onStartup()
-
-        # assume a EVT_GAME_ROUND_STARTED event was fired and handled
-        self.p._round_started = True
-
         # prepare a few players
-        self.joe = FakeClient(self.console, name="Joe", exactName="Joe", guid="zaerezarezar", groupBits=1, country='de',)
-        self.simon = FakeClient(self.console, name="Simon", exactName="Simon", guid="qsdfdsqfdsqf", groupBits=0, country='us',)
+        self.joe = FakeClient(self.console, name="Joe", exactName="Joe", guid="zaerezarezar", groupBits=1, country='de',team=TEAM_RED)
+        self.simon = FakeClient(self.console, name="Simon", exactName="Simon", guid="qsdfdsqfdsqf", groupBits=0, country='us',team=TEAM_BLUE)
         self.admin = FakeClient(self.console, name="Level-40-Admin", exactName="Level-40-Admin", guid="875sasda", groupBits=16, country='ch',)
         self.superadmin = FakeClient(self.console, name="God", exactName="God", guid="f4qfer654r", groupBits=128, country='fr',)
 
@@ -63,8 +63,12 @@ us1 #7: Killing Spree! %(murderer)s is dominating on a %(kill_streak_value)s kil
         # THEN
         self.assertTrue(update_killstreaks_mock.called)
 
-
+    #
+    # Test announcement on first kill
+    #
     def test_first_kill_does_get_announced(self):
+        # assume a EVT_GAME_ROUND_STARTED event was fired and handled
+        self.p._round_started = True
         # WHEN
         with patch(target='b3.fake.FakeClient.message') as saybig_mock:
             self.joe.kills(self.simon)
@@ -74,6 +78,9 @@ us1 #7: Killing Spree! %(murderer)s is dominating on a %(kill_streak_value)s kil
                               call('Joe takes first blood against Simon! The battle has just began!!!')], saybig_mock.mock_calls)
 
     def test_second_kill_does_not_get_announced(self):
+        # assume a EVT_GAME_ROUND_STARTED event was fired and handled
+        self.p._round_started = True
+
         with patch(target='b3.fake.FakeClient.message') as saybig_mock:
             self.joe.kills(self.simon)
             self.simon.kills(self.joe)
@@ -81,3 +88,28 @@ us1 #7: Killing Spree! %(murderer)s is dominating on a %(kill_streak_value)s kil
         self.assertTrue(saybig_mock.called)
         self.assertListEqual([call('Joe hat das erste Blut von Simon genommen! Die Schlacht hat begonnen!!!'),
                               call('Joe takes first blood against Simon! The battle has just began!!!')], saybig_mock.mock_calls)
+
+    #
+    # Streak tests
+    #
+    def test_kill_streak(self):
+        with patch(target='b3.fake.FakeClient.message') as announce_kill_streak_mock:
+            # Joe kills Simon 5 times:
+            _count = 0
+            while _count < 5 :
+                _count += 1
+                self.joe.kills(self.simon)
+        self.assertTrue(announce_kill_streak_mock.called)
+        self.assertListEqual([call('Killing Spree! Joe is dominating on a 5 kill streak!'),
+                              call('Killing Spree! Joe is dominating on a 5 kill streak!')], announce_kill_streak_mock.mock_calls)
+        # and kill himm again - 10 kills
+        with patch(target='b3.fake.FakeClient.message') as announce_kill_streak_mock:
+            # Joe kills Simon 5 times again:
+            _count = 0
+            while _count < 5 :
+                _count += 1
+                self.joe.kills(self.simon)
+        self.assertTrue(announce_kill_streak_mock.called)
+        self.assertListEqual([call('Killing Spree! Joe is dominating on a 10 kill streak!'),
+                              call('Killing Spree! Joe is dominating on a 10 kill streak!')], announce_kill_streak_mock.mock_calls)
+
