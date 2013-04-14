@@ -52,7 +52,7 @@ class Killannouncerbf3Plugin(Plugin):
     _clientvar_name = 'Killannouncerbf3Plugin'
     _handle_firstkill = False
     _round_started = False
-    _weaponlist = None
+    _weaponlist = dict()
 
     _language_assignments = dict()
     streak_messages = dict()
@@ -61,21 +61,11 @@ class Killannouncerbf3Plugin(Plugin):
     def onLoadConfig(self):
         #load settings
         self._load_settings()
-
-        #check for settings section in config
-        remove_sections = ['settings', 'first kill alert', 'losing streak alerts','kill streak alerts', 'end kill streak alerts', 'language_assignments',]
-        if self.config.has_section('settings'):
-            #load all section names
-            all_sections = self.config.sections()
-            #remove known section names
-            for i in remove_sections:
-                if i in all_sections:
-                    all_sections.remove(i)
-
-            self._weaponlist = all_sections
-        else:
-            self.error('[settings] section missing in config')
-
+        # update weapons assignment dict
+        _non_weapon_section = ['settings', 'first kill alert', 'losing streak alerts','kill streak alerts', 'end kill streak alerts', 'language_assignments',]
+        for section in self.config.sections():
+            if section not in _non_weapon_section:
+                self._weaponlist.update( dict().fromkeys([x.strip() for x in section.split(',')], section ))
 
     def onStartup(self):
         self._adminPlugin = self.console.getPlugin('admin')
@@ -157,8 +147,8 @@ class Killannouncerbf3Plugin(Plugin):
             self._sayBig( 'end kill streak alerts' , {'murderer': _killer.name, 'victim': _victim.name,'kill_streak_value':_finish_streak})
 
         # check for weapon action ( example: anounce msg on knifekill
-        if _weapon in self._weaponlist:
-            self._sayBig( _weapon , { 'murderer' : _killer.name, 'victim': _victim.name,})
+        if _weapon in self._weaponlist.keys():
+            self._sayBig( self._weaponlist[_weapon] , { 'murderer' : _killer.name, 'victim': _victim.name,})
 
         # check for firstkill and handle
         if self._handle_firstkill and self._round_started:
