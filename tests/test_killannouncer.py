@@ -37,6 +37,9 @@ us2 #10: Killing Spree! %(murderer)s is dominating on a %(kill_streak_value)s ki
 us1: %(murderer)s has ended %(murderer)s kill streak at %(kill_streak_value)s kills!
 
         ''')
+        # Plugin ipinfodb is required. We trick and set county property later.
+        self.p.console._plugins['ipinfodb'] = ''
+
         self.p.onLoadConfig()
         self.p.onStartup()
         # prepare a few players

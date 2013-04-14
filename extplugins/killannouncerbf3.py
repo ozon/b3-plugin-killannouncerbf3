@@ -68,6 +68,10 @@ class Killannouncerbf3Plugin(Plugin):
                 self._weaponlist.update( dict().fromkeys([x.strip() for x in section.split(',')], section ))
 
     def onStartup(self):
+        # check for Ipinfodb plugin
+        if not 'ipinfodb' in self.console._plugins:
+            self.error('Ipinfodb Plugin is required!')
+            return
         self._adminPlugin = self.console.getPlugin('admin')
         if not self._adminPlugin:
             # something is wrong, can't start without admin plugin
@@ -241,7 +245,7 @@ if __name__ == '__main__':
     superadmin.says('!putgroup simon user')
 
     joe.country = 'DE'
-    simon.country = 'DE'
+    simon.country = 'at'
     superadmin.country = 'US'
 
     #fire some kills
