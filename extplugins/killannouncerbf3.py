@@ -158,11 +158,16 @@ class Killannouncerbf3Plugin(Plugin):
     def _sayBig_killstreak(self, streak_count, formatvalues=None):
         clients = self.console.clients.getList()
         for c in clients:
-            _country_code = self._get_country_code(c.country.lower())
-            if _country_code in self.streak_messages:
-                c.message(self.streak_messages[_country_code][streak_count] % formatvalues)
-            else:
-                c.message(self.streak_messages['us'][streak_count] % formatvalues)
+            try:
+                c.message(
+                    self.streak_messages.get(
+                        c.country.lower(), self.streak_messages.get(
+                            self._language_assignments.get(
+                                c.country.lower(), 'us')
+                        )
+                    ).get(streak_count) % formatvalues )
+            except Exception, e:
+                self.error(e.message)
 
     def _get_random_langmsg_dict(self, section):
         _msgitems = self.config.items(section, raw=True)
@@ -179,16 +184,16 @@ class Killannouncerbf3Plugin(Plugin):
         else:
             clients = self.console.clients.getList()
             for c in clients:
-                _country_code = self._get_country_code(c.country.lower())
-                if _country_code in _msgdict:
-                    c.message(_msgdict[_country_code] % formatvalues)
-                else:
-                    c.message(_msgdict['us'] % formatvalues)
-
-    def _get_country_code(self, country_code):
-        if country_code in self._language_assignments:
-            country_code = self._language_assignments[country_code]
-        return country_code
+                try:
+                    c.message(
+                        _msgdict.get(
+                            c.country.lower(), _msgdict.get(
+                                self._language_assignments.get(
+                                    c.country.lower(), 'us')
+                            )
+                        ) % formatvalues )
+                except Exception, e:
+                    self.error(e.message)
 
     def _load_streak_messages(self):
         _streak_items = self.config.items('kill streak alerts', raw=True)
