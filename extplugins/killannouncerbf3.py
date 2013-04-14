@@ -185,7 +185,7 @@ class Killannouncerbf3Plugin(Plugin):
     def _sayBig(self, message_section, formatvalues=None):
         _msgdict = self._get_random_langmsg_dict(message_section)
         if len(_msgdict) <= 1:
-            self.console.saybig(_msgdict.values() % (formatvalues))
+            self.console.saybig(_msgdict.values()[0] % (formatvalues))
         else:
             clients = self.console.clients.getList()
             for c in clients:
