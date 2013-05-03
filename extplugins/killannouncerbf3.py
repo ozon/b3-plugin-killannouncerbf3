@@ -69,8 +69,8 @@ class Killannouncerbf3Plugin(Plugin):
 
     def onStartup(self):
         # check for Ipinfodb plugin
-        if not 'ipinfodb' in self.console._plugins:
-            self.error('Ipinfodb Plugin is required!')
+        if not 'advgeoip' in self.console._plugins:
+            self.error('advgeoip Plugin is required!')
             return
         self._adminPlugin = self.console.getPlugin('admin')
         if not self._adminPlugin:
